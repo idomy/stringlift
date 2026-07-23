@@ -28,6 +28,19 @@ ok(translated.includes('data-testid="search-box"'), "apply leaves data-testid un
 ok(translated.includes('className="flex flex-col gap-4 rounded-xl border p-4"'), "apply leaves className untouched");
 ok(translated.includes("`${count} elementi selezionati`"), "apply rebuilds template literal");
 
+// report
+const reportDir = path.join(out, "report-app");
+const reportGlossary = path.join(out, "report.glossary.json");
+fs.cpSync(demo, reportDir, { recursive: true });
+fs.writeFileSync(reportGlossary, JSON.stringify({ "Welcome to the demo": "Benvenuto nella demo" }));
+const reportFile = path.join(reportDir, "src", "App.tsx");
+const beforeReport = fs.readFileSync(reportFile, "utf8");
+const reportOut = execFileSync("node", [cli, "apply", reportDir, "--glossary", reportGlossary, "--report"], { encoding: "utf8" });
+const afterReport = fs.readFileSync(reportFile, "utf8");
+ok(reportOut.includes(`${path.join("src", "App.tsx")}:\n`) && reportOut.includes('"Welcome to the demo" -> "Benvenuto nella demo"'), "report lists translations per file");
+ok(reportOut.includes('"Main heading" -> skipped'), "report marks strings missing from the glossary as skipped");
+ok(afterReport === beforeReport, "report leaves source files unchanged");
+
 // verify
 const verifyOut = execFileSync("node", [cli, "verify", demo, out], { encoding: "utf8" });
 ok(/0 changed/.test(verifyOut) && /SAFE/.test(verifyOut), "verify proves no structural change");

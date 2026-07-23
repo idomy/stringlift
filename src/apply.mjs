@@ -62,6 +62,21 @@ const decodeEntities = (s) =>
     return named[g] !== undefined ? named[g] : m;
   });
 
+// Group the glossary results that apply() would use, without reading or writing files.
+export function report(records, glossary) {
+  const byFile = new Map();
+  for (const r of records) {
+    const source = r.kind === "template" ? r.text : r.text.trim();
+    const translation = glossary[source];
+    if (!byFile.has(r.file)) byFile.set(r.file, []);
+    byFile.get(r.file).push({
+      source,
+      translation: translation == null || translation === source ? null : translation,
+    });
+  }
+  return byFile;
+}
+
 // Apply a glossary { sourceString: translation } to every file, writing to destDir.
 // Replacements run bottom-up so earlier byte offsets stay valid.
 export function apply(records, glossary, srcDir, destDir) {

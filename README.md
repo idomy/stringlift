@@ -7,6 +7,7 @@
 ```bash
 npx stringlift extract ./src -o strings.json
 # ...fill in strings.glossary.json with translations (by hand or with an LLM)...
+npx stringlift apply ./src --glossary strings.glossary.json --report
 npx stringlift apply ./src --glossary strings.glossary.json --out ./src-it
 npx stringlift verify ./src ./src-it
 # ✓ SAFE: files differ only inside string/template contents. No code changed.
@@ -50,6 +51,7 @@ This "verify that an automated edit changed only what it was allowed to" pattern
 | Command | What it does | Touches your files? |
 |---|---|---|
 | `stringlift extract <dir> [-o out.json]` | Lists every user-facing string + writes an empty translation stub | Read-only |
+| `stringlift apply <src> --glossary <map.json> --report` | Previews translations and skipped strings, grouped by file | Read-only |
 | `stringlift apply <src> --glossary <map.json> [--out <dest>]` | Writes a translated copy | Writes `<dest>` |
 | `stringlift verify <orig> <new>` | Proves `<new>` differs from `<orig>` only inside strings | Read-only |
 
