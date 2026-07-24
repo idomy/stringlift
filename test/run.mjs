@@ -3,6 +3,7 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
+import { extractFile } from "../src/extract.mjs";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const cli = path.join(root, "bin", "cli.mjs");
@@ -31,6 +32,33 @@ ok(translated.includes("`${count} elementi selezionati`"), "apply rebuilds templ
 // verify
 const verifyOut = execFileSync("node", [cli, "verify", demo, out], { encoding: "utf8" });
 ok(/0 changed/.test(verifyOut) && /SAFE/.test(verifyOut), "verify proves no structural change");
+
+// ── fixture: mixed-case-identifiers (extractFile — isolates to one file) ──
+const mcCode = fs.readFileSync(path.join(root, "examples", "fixtures", "mixed-case-identifiers.tsx"), "utf8");
+const mcRecords = extractFile("mixed-case-identifiers.tsx", mcCode);
+const mcStrings = mcRecords.map((r) => r.text.trim());
+
+// Real prose MUST be extracted
+ok(mcStrings.includes("Main heading"), "mixed-case: extracts title attr");
+ok(mcStrings.includes("Welcome to the app"), "mixed-case: extracts JSX text");
+ok(mcStrings.includes("You have items"), "mixed-case: extracts JSX text across elements");
+ok(mcStrings.includes("Search projects..."), "mixed-case: extracts placeholder attr");
+ok(mcStrings.includes("Show details"), "mixed-case: extracts ternary branch prose");
+ok(mcStrings.includes("Hide details"), "mixed-case: extracts ternary branch prose");
+ok(mcStrings.includes("Found"), "mixed-case: extracts && right-side prose");
+ok(mcStrings.includes("New"), "mixed-case: extracts ternary branch prose");
+ok(mcStrings.includes("Old"), "mixed-case: extracts ternary branch prose");
+ok(mcStrings.includes("Content"), "mixed-case: extracts JSX text");
+ok(mcStrings.includes("fallback"), "mixed-case: extracts ternary alternate prose");
+ok(mcStrings.includes("other"), "mixed-case: extracts ternary alternate prose");
+
+// Mixed-case snake_case identifiers MUST be skipped
+ok(!mcStrings.includes("User_Name"), "mixed-case: skips User_Name identifier");
+ok(!mcStrings.includes("Api_V2"), "mixed-case: skips Api_V2 identifier");
+ok(!mcStrings.includes("My_VAR_name"), "mixed-case: skips My_VAR_name identifier");
+
+// Existing snake_case detection must not regress
+ok(!mcStrings.includes("error_code"), "mixed-case: skips existing error_code identifier");
 
 fs.rmSync(out, { recursive: true, force: true });
 console.log(failures === 0 ? "\nAll tests passed." : `\n${failures} test(s) failed.`);
