@@ -25,6 +25,7 @@ export function isUserFacing(text) {
   if (/^[a-z0-9]+([-_./:][a-z0-9]+)+$/.test(s)) return false;
   if (/^[a-z]+([A-Z][a-z0-9]*)+$/.test(s)) return false; // camelCase
   if (/^[A-Z0-9_]{2,}$/.test(s)) return false;           // CONST
+  if (/^[A-Za-z][A-Za-z0-9]*(_[A-Za-z0-9]+)+$/.test(s)) return false; // mixed snake_case
   return true;
 }
 
