@@ -1,9 +1,10 @@
 import fs from "fs";
 import path from "path";
 import { parseCode, traverse } from "./parse.mjs";
+import { extractVueFile } from "./extract-vue.mjs";
 import { DEFAULT_UI_ATTRS, SKIP_ATTRS, isUserFacing, looksLikeCss } from "./heuristics.mjs";
 
-export function walkFiles(dir, exts = [".tsx", ".jsx"], ignore = ["node_modules", ".git", "dist", "build"]) {
+export function walkFiles(dir, exts = [".tsx", ".jsx", ".vue"], ignore = ["node_modules", ".git", "dist", "build"]) {
   const out = [];
   (function walk(d) {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
@@ -112,7 +113,8 @@ export function extract(dir, opts = {}) {
   const records = [];
   for (const f of files) {
     const rel = path.relative(dir, f);
-    records.push(...extractFile(rel, fs.readFileSync(f, "utf8"), opts));
+    const code = fs.readFileSync(f, "utf8");
+    records.push(...(f.endsWith(".vue") ? extractVueFile(rel, code, opts) : extractFile(rel, code, opts)));
   }
   const unique = new Map();
   for (const r of records) {

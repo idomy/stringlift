@@ -3,20 +3,40 @@
   "version": "0.1.0",
   "description": "Safely retrofit i18n into React/TypeScript apps that were never internationalized — extract user-facing strings, translate them, and prove your code is byte-for-byte intact.",
   "type": "module",
-  "bin": { "stringlift": "bin/cli.mjs" },
+  "bin": {
+    "stringlift": "bin/cli.mjs"
+  },
   "exports": {
     ".": "./src/index.mjs"
   },
-  "files": ["src", "bin", "README.md", "LICENSE"],
+  "files": [
+    "src",
+    "bin",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "node test/run.mjs"
   },
-  "keywords": ["i18n", "internationalization", "localization", "react", "typescript", "jsx", "ast", "translation", "codemod"],
+  "keywords": [
+    "i18n",
+    "internationalization",
+    "localization",
+    "react",
+    "typescript",
+    "jsx",
+    "ast",
+    "translation",
+    "codemod"
+  ],
   "author": "Domenico Pace",
   "license": "MIT",
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "@babel/parser": "^7.25.0",
-    "@babel/traverse": "^7.25.0"
+    "@babel/traverse": "^7.25.0",
+    "@vue/compiler-sfc": "^3.5.42"
   }
 }
