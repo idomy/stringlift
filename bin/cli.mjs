@@ -2,7 +2,7 @@
 import fs from "fs";
 import path from "path";
 import { extract } from "../src/extract.mjs";
-import { apply } from "../src/apply.mjs";
+import { apply, report } from "../src/apply.mjs";
 import { verify } from "../src/verify.mjs";
 
 const [, , cmd, ...rest] = process.argv;
@@ -18,10 +18,10 @@ function help() {
 
 Usage:
   stringlift extract <dir> [-o strings.json]
-  stringlift apply   <srcDir> --glossary <map.json> [--out <destDir>]
+  stringlift apply   <srcDir> --glossary <map.json> [--out <destDir> | --report]
   stringlift verify  <origDir> <newDir>
 
-Every command is read-only on your source except 'apply', which writes a copy.
+Every command is read-only on your source except 'apply' without '--report', which writes a copy.
 'apply' followed by 'verify' proves your code structure is byte-for-byte intact.`);
 }
 
@@ -50,12 +50,22 @@ if (cmd === "extract") {
   const destDir = opt("--out") || opt("-o") || srcDir;
   if (!srcDir || !glossaryPath) { help(); process.exit(1); }
   const glossary = JSON.parse(fs.readFileSync(glossaryPath, "utf8"));
-  if (destDir !== srcDir) fs.cpSync(srcDir, destDir, { recursive: true });
-  const { records } = extract(destDir);
-  const stats = apply(records, glossary, destDir, destDir);
-  console.log(`Applied ${stats.applied} replacements across ${stats.filesChanged} files (${stats.skipped} skipped).`);
-  if (stats.problems.length) console.log(`  ${stats.problems.length} problems (see records).`);
-  console.log(`Now run:  stringlift verify ${srcDir} ${destDir}`);
+  if (rest.includes("--report")) {
+    const { records } = extract(srcDir);
+    for (const [file, entries] of report(records, glossary)) {
+      console.log(`${file}:`);
+      for (const { source, translation } of entries) {
+        console.log(`  ${JSON.stringify(source)} -> ${translation == null ? "skipped" : JSON.stringify(translation)}`);
+      }
+    }
+  } else {
+    if (destDir !== srcDir) fs.cpSync(srcDir, destDir, { recursive: true });
+    const { records } = extract(destDir);
+    const stats = apply(records, glossary, destDir, destDir);
+    console.log(`Applied ${stats.applied} replacements across ${stats.filesChanged} files (${stats.skipped} skipped).`);
+    if (stats.problems.length) console.log(`  ${stats.problems.length} problems (see records).`);
+    console.log(`Now run:  stringlift verify ${srcDir} ${destDir}`);
+  }
 } else if (cmd === "verify") {
   const [origDir, newDir] = positional;
   if (!origDir || !newDir) { help(); process.exit(1); }
